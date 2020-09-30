@@ -2,17 +2,20 @@
 
 CLASS("RadioJammer")
 
-	PUBLIC STATIC_VARIABLE("code", "INSTANCE");
-	MEMBER("INSTANCE", NEW(RadioJammer, [nil, nil]));
-	PUBLIC STATIC_VARIABLE("array", "RADIO_TOWERS");	
-	PRIVATE VARIABLE("SCALAR", "range");
-	PRIVATE VARIABLE("OBJECT", "position");
-	PRIVATE VARIABLE("SCALAR", "destroyed");
+	PUBLIC STATIC_VARIABLE("array", "RADIO_TOWERS");
+	PUBLIC VARIABLE("SCALAR", "range");
+	PUBLIC VARIABLE("OBJECT", "tower");
+	PUBLIC VARIABLE("SCALAR", "destroyed");
+
+	PUBLIC STATIC_VARIABLE("object", "tempTower");
+	PUBLIC STATIC_VARIABLE("scalar", "tempRange");
 
 	PUBLIC FUNCTION("ARRAY", "constructor") {
-		MEMBER("range", _this select 0);	
-		MEMBER("position", _this select 1);
-		MEMBER("isDestroyed", 0);
+		MEMBER("range", _this select 0);
+		MEMBER("tower", _this select 1);
+		MEMBER("destroyed", 0);
+		MEMBER("tempTower", nil);
+		MEMBER("tempRange", nil);
 	};
 	PUBLIC FUNCTION("", "deconstructor") {};
 
@@ -20,26 +23,44 @@ CLASS("RadioJammer")
 		_worldSize = _this select 0;
 		_smallRange = _this select 1;
 		_largeRange = _this select 2;
-		_mapCenterPosition = [_worldSize / 2, _worldSize / 2, 0];
+		_mapCenterPosition = _worldSize / 2;
 
 		_tallTowerList = [_mapCenterPosition, _mapCenterPosition] nearObjects ["Land_TTowerBig_2_F", _worldSize];
 		_smallTowerList = [_mapCenterPosition, _mapCenterPosition] nearObjects ["Land_TTowerBig_1_F", _worldSize];
 
 		{
-			MEMBER("cacheTower", NEW(RadioJammer, [_largeRange, getPos _x]));
-		} forEach _tallTowerList
+			_towerObject = ["new", [_largeRange, _x]] call RadioJammer;
+			MEMBER("RADIO_TOWERS", nil) pushBack _towerObject;
+
+			_towerLocation = getPos _x;
+			_towerMarker = createMarker ["JammerTowerTall", _towerLocation];
+			_towerMarker setMarkerShape "ELLIPSE";
+			_towerMarker 
+
+			MEMBER("tempTower", _x);
+			MEMBER("tempRange", _largeRange);
+
+		} forEach _tallTowerList;
 
 		{
-			MEMBER("cacheTower", NEW(RadioJammer, [_smallRange, getPos _x]));
-		} forEach _smallTowerList
-	};
+			_towerObject = ["new", [_smallRange, _x]] call RadioJammer;
+			MEMBER("RADIO_TOWERS", nil) pushBack _towerObject;
 
-	PUBLIC FUNCTION("CODE", "cacheTower") {
-		MEMBER("RADIO_TOWERS", _this) pushBack "RADIO_TOWERS";
-		private _towerPosition = MEMBER("position", nil);
-		private _towerRange = MEMBER("range", nil);
-		drawEllipse [_towerPosition, _towerRange, _towerRange, 360, [255, 0, 0, 0.5], "#(rgb,255,0,0)color(1,0,0,1)"]
+			_towerLocation = getPos _x;
+			_towerMarker = createMarker ["JammerTowerSmall", _towerLocation];
+			_towerMarker setMarkerType "hd_dot";
+
+			MEMBER("tempTower", _x);
+			MEMBER("tempRange", _smallRange);
+			findDisplay 12 displayCtrl 51 ctrlAddEventHandler ["Draw",
+			{
+				_tempTowerPosition = getPos MEMBER("tempTower", nil);
+				_tempRange = MEMBER("tempRange", nil);
+				_this select 0 drawEllipse [
+					_tempTowerPosition, _tempRange, _tempRange, 0, [255, 0, 0, 1], ""
+				];
+			}];
+		} forEach _smallTowerList;
 	};
-}
 
 ENDCLASS;
