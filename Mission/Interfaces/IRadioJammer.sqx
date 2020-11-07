@@ -1,0 +1,12 @@
+namespace Mission
+{
+	public interface IRadioJammer 
+	{
+		method Boolean IsObjectInRangeOfTower("_objectToCheck" as Object);
+		method Array GetTowersInRangeOfObject("_objectToCheck" as Object);
+		method Scalar GetDistanceToJammer("_objectInRange" as Object);
+		method Scalar GetInterferenceOfTower("_objectInterfered" as Object);
+		method DrawRangeOnMap();
+		method Scalar GetTotalInterferenceOfTowers("_objectInRange" as Object);
+	};	
+};

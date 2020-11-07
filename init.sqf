@@ -1,5 +1,2 @@
-call compile preprocessFileLineNumbers "OO_RADIOJAMMER.sqf";
+execVM "init.sqx.sqf"; // Added by TypeSqf.MissionTemplate.Mp.Standard
 sleep 1;
-
-_radioJammerInstance = ["new", [nil, nil]] call OO_RADIOJAMMER;
-["createJammers", [3000, 5000]] call _radioJammerInstance;

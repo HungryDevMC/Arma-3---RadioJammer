@@ -1,0 +1,115 @@
+namespace Mission
+{
+	public class RadioJammer : IRadioJammer
+	{
+		public static property Array RADIO_TOWERS { get; set; };
+		public static property Scalar INTERFERENCE { get; set; };
+	
+		public property Scalar Range { get; set; };
+		public property Object Tower { get; set; };
+		public property Boolean Destroyed { get; set; };
+		
+		public constructor("_range" as Scalar, "_towerObject" as Object)
+		{
+			_self.Range = _range;
+			_self.Tower = _towerObject;
+			_self.Destroyed = false;
+		};
+	
+		public static method CreateJammers("_smallRange" as Scalar, "_largeRange" as Scalar, "_interference" as Scalar)
+		{
+			private ["_smallTowerList" as Array, "_tallTowerList" as Array, "_jammerTowerObject" as RadioJammer, "_mapUtil" as MapUtil];
+			_self.RADIO_TOWERS = [];
+			_self.INTERFERENCE = _interference;
+
+			_mapUtil = new MapUtil;
+			_smallTowerList = ["ttowerbig_1_f"] call _mapUtil.GetBuildingsOfTypeOnMap;
+			{
+				_jammerTowerObject = [_smallRange, _x] new RadioJammer;
+				_self.RADIO_TOWERS pushBack _jammerTowerObject;
+				call _jammerTowerObject.DrawRangeOnMap;
+			}forEach _smallTowerList;
+
+			_tallTowerList = ["ttowerbig_2_f"] call _mapUtil.GetBuildingsOfTypeOnMap;
+			{
+				_jammerTowerObject = [_largeRange, _x] new RadioJammer;
+				_self.RADIO_TOWERS pushBack _jammerTowerObject;
+				call _jammerTowerObject.DrawRangeOnMap;
+			}forEach _tallTowerList;
+		};
+	
+		public method Boolean IsObjectInRangeOfTower("_objectToCheck" as Object)
+		{
+			private ["_distanceBetween" as Scalar, "_isInRange" as Boolean];
+			_distanceBetween = [_objectToCheck] call _self.GetDistanceToJammer;
+			_isInRange = _distanceBetween <= _self.Range;
+			return _isInRange;
+		};
+		
+		public method Scalar GetDistanceToJammer("_objectInRange" as Object) 
+		{
+			private "_distance" as Scalar;
+			_distance = (getPos _objectInRange) distance (getPos _self.Tower);
+			hint format["Distance to tower: %1", _distance];
+			return _distance;
+		};
+		
+		public method Scalar GetInterferenceOfTower("_objectInterfered" as Object)
+		{
+			private ["_distanceBetween" as Scalar, "_defaultInRange" as Scalar, "_multiplierOfDistance" as Scalar, "_totalInterference" as Scalar];
+			_distanceBetween = [_objectInterfered] call _self.GetDistanceToJammer;
+			//hint format["Interference: %1, range: %2, distanceBetween: %3", _self.Range, _self.INTERFERENCE, _distanceBetween];
+			_defaultInRange = _self.INTERFERENCE / 2;
+			_multiplierOfDistance = (_self.Range - _distanceBetween) / _self.Range;
+			_totalInterference = (_self.INTERFERENCE * _multiplierOfDistance) + _defaultInRange;
+			return _totalInterference;
+		};
+		
+		public method Array GetTowersInRangeOfObject("_objectToCheck" as Object)
+		{
+			private ["_towersInRange" as Array, "_jammer" as RadioJammer, "_isInRange" as Boolean];
+			_towersInRange = [];
+			{
+					_jammer = _x as RadioJammer;
+					_isInRange = [_objectToCheck] call _jammer.IsObjectInRangeOfTower;
+					if((_isInRange isEqualTo true) && (_jammer.Destroyed isEqualTo false)) then {
+							_towersInRange append [_jammer];
+					};
+			}forEach _self.RADIO_TOWERS;
+			return _towersInRange;
+		};
+		
+		public method DrawRangeOnMap()
+		{
+			private ["_towerMarker" as String, "_towerMarkerOverlay" as String, "_towerLocation" as Array];
+			_towerLocation = getPos _self.Tower;
+			_towerMarker = createMarker [format["jammerTower%1", _self.Tower], _towerLocation];
+			_towerMarker setMarkerShape "ELLIPSE";
+			_towerMarker setMarkerColor "ColorOPFOR";
+			_towerMarker setMarkerSize [_self.Range, _self.Range];
+			_towerMarker setMarkerBrush "Solid";
+			_towerMarker setMarkerAlpha 0.25;
+
+			_towerMarkerOverlay = createMarker [format["jammerTowerOverlay%1", _self.Tower], _towerLocation];
+			_towerMarkerOverlay setMarkerShape "ELLIPSE";
+			_towerMarkerOverlay setMarkerColor "ColorBlack";
+			_towerMarkerOverlay setMarkerSize [_self.Range, _self.Range];
+			_towerMarkerOverlay setMarkerBrush "FDiagonal";
+		};
+		
+		public method Scalar GetTotalInterferenceOfTowers("_objectInRange" as Object)
+		{
+			private ["_towersInRange" as Array, "_totalInterference" as Scalar, "_towerInterference" as Scalar];
+			_towersInRange = [_objectInRange] call _self.GetTowersInRangeOfObject;
+
+			_totalInterference = 0;
+			_towerInterference = 0;
+			{
+					_towerInterference = [_objectInRange] call _self.GetInterferenceOfTower;
+					//hint format["Tower interference: %1", _towerInterference];
+					_totalInterference = _totalInterference + _towerInterference;
+			}forEach _towersInRange;
+			return _totalInterference;
+		};
+	};
+};

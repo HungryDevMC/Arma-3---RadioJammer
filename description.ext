@@ -1,0 +1,18 @@
+// Mission Header
+class Header
+{
+  gameType = COOP;
+  minPlayers = 1;
+  maxPlayers = 60;
+};
+
+onLoadName = "Jammer testing mission";
+onLoadMission = "Jammer testing multiplayer mission";
+
+overviewText = "Jammer testing multiplayer mission";
+overviewTextLocked = "";
+author = "HungryDev";
+
+OnLoadMissionTime = false;
+disabledAI = 1;
+respawn = "NONE";

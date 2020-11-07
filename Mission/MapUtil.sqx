@@ -1,0 +1,17 @@
+namespace Mission
+{
+	public class MapUtil
+	{
+		public static method Array GetBuildingsOfTypeOnMap("_buildingType" as String) {
+			private ["_buildingsOnMap" as Array, "_worldObject" as Object];
+			_buildingsOnMap = [];
+			{
+				_worldObject = _x as Object;
+				if([_buildingType, format ["%1",_worldObject]] call BIS_fnc_inString) then {
+					_buildingsOnMap pushBack _worldObject;
+				};
+			}forEach allMissionObjects "ALL";
+			return _buildingsOnMap;
+		};
+	};
+};

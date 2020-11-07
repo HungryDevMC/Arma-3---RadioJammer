@@ -1,0 +1,15 @@
+call compile preprocessFileLineNumbers "Mission\MapUtil.sqx";
+call compile preprocessFileLineNumbers "Mission\RadioJammer.sqx";
+
+using Mission;
+
+[3000, 5000, 3.5] call RadioJammer.CreateJammers;
+
+["JammerHandler", "OnSpeak", {
+	private ["_radioJammerInstance" as RadioJammer, "_totalInterference" as Scalar];
+	_radioJammerInstance = [3000, objNull] new RadioJammer;
+	
+    _totalInterference = [param[0]] call _radioJammerInstance.GetTotalInterferenceOfTowers;
+    //hint format["Total interference: %1", _totalInterference];
+	hint format ["Position of player: %1", (getPos param[0])];
+}, objNull] call TFAR_fnc_addEventHandler;
